@@ -66,8 +66,10 @@ final class NewsDetailsViewController: UIViewController {
         $0.translatesAutoresizingMaskIntoConstraints = false
         $0.textColor = .black
         $0.font = .systemFont(ofSize: 17, weight: .regular)
-        $0.numberOfLines = 4
+        $0.numberOfLines = 0
     }
+
+    private let imageCache = NSCache<NSString, UIImage>()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -114,11 +116,14 @@ final class NewsDetailsViewController: UIViewController {
                 publishedDateLabel.text = DateFormatter().then { $0.dateFormat = "dd.MM.yyyy" }.string(from: publishedDate)
             }
 
-            let placeholderImage = UIImage(named: "placeholder")
             if let titleImageUrl = newsItem.titleImageUrl, let imageUrl = URL(string: titleImageUrl) {
-                titleImageView.setImage(url: imageUrl, placeholder: placeholderImage)
+                if let imageFromCache = imageCache.object(forKey: imageUrl.absoluteString as NSString) {
+                    titleImageView.image = imageFromCache
+                } else {
+                    titleImageView.setImage(imageUrl, with: imageCache)
+                }
             } else {
-                titleImageView.image = placeholderImage
+                titleImageView.isHidden = true
             }
 
             descriptionLabel.text = newsItem.description

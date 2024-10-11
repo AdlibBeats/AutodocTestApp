@@ -51,6 +51,14 @@ final class NewsViewController: UIViewController {
             fatalError("init(coder:) has not been implemented")
         }
 
+        override func prepareForReuse() {
+            super.prepareForReuse()
+
+            titleImageLoadingTask?.cancel()
+            titleLabel.text = ""
+            titleImageView.image = UIImage(named: "placeholder")
+        }
+
         override func setSelected(_ selected: Bool, animated: Bool) {
             rootView.backgroundColor = selected ? .init(red: 1.0, green: 0.9, blue: 0.9, alpha: 1.0) : UIColor.white
         }
@@ -86,19 +94,26 @@ final class NewsViewController: UIViewController {
 
         private let titleImageView = UIImageView().then {
             $0.translatesAutoresizingMaskIntoConstraints = false
+            $0.image = UIImage(named: "placeholder")
             $0.contentMode = .scaleAspectFill
             $0.layer.cornerRadius = 20
             $0.clipsToBounds = true
         }
 
+        private let imageCache = NSCache<NSString, UIImage>()
+        private var titleImageLoadingTask: Task<Void, Error>?
+
         func bind(to newsItem: NewsModel.NewsItem) {
             titleLabel.text = newsItem.title
 
-            let placeholderImage = UIImage(named: "placeholder")
             if let titleImageUrl = newsItem.titleImageUrl, let imageUrl = URL(string: titleImageUrl) {
-                titleImageView.setImage(url: imageUrl, placeholder: placeholderImage)
+                if let imageFromCache = imageCache.object(forKey: imageUrl.absoluteString as NSString) {
+                    titleImageView.image = imageFromCache
+                } else {
+                    titleImageLoadingTask = titleImageView.makeImageLoadingTask(imageUrl, with: imageCache)
+                }
             } else {
-                titleImageView.image = placeholderImage
+                titleImageView.image = UIImage(named: "placeholder")
             }
         }
     }

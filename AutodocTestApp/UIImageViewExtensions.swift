@@ -7,25 +7,43 @@
 
 import UIKit
 
-private let imageCache = NSCache<NSString, UIImage>()
-
 extension UIImageView {
-    enum ImageLoaderError: Error {
+    enum ImageLoadingError: Error {
         case invalidData
     }
 
-    func setImage(url: URL, placeholder: UIImage?) {
-        if let imageFromCache = imageCache.object(forKey: url.absoluteString as NSString) {
-            self.image = imageFromCache
-        } else {
-            self.image = placeholder
-            Task {
-                let (data, _) = try await URLSession.shared.data(from: url)
-                guard let image = UIImage(data: data) else {
-                    throw ImageLoaderError.invalidData
+    func setImage(_ imageUrl: URL, with imageCache: NSCache<NSString, UIImage>, animate: Bool = true) {
+        Task {
+            let (data, _) = try await URLSession.shared.data(from: imageUrl)
+            guard let image = UIImage(data: data) else {
+                throw ImageLoadingError.invalidData
+            }
+            imageCache.setObject(image, forKey: imageUrl.absoluteString as NSString)
+            self.image = image
+
+            if animate {
+                alpha = 0.0
+                UIView.animate(withDuration: 0.3) {
+                    self.alpha = 1.0
                 }
-                imageCache.setObject(image, forKey: url.absoluteString as NSString)
-                self.image = image
+            }
+        }
+    }
+
+    func makeImageLoadingTask(_ imageUrl: URL, with imageCache: NSCache<NSString, UIImage>, animate: Bool = true) -> Task<Void, Error> {
+        return Task {
+            let (data, _) = try await URLSession.shared.data(from: imageUrl)
+            guard let image = UIImage(data: data) else {
+                throw ImageLoadingError.invalidData
+            }
+            imageCache.setObject(image, forKey: imageUrl.absoluteString as NSString)
+            self.image = image
+
+            if animate {
+                alpha = 0.0
+                UIView.animate(withDuration: 0.3) {
+                    self.alpha = 1.0
+                }
             }
         }
     }
