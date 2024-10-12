@@ -1,5 +1,5 @@
 //
-//  NewsItemTableViewCell.swift
+//  NewsItemCollectionViewCell.swift
 //  AutodocTestApp
 //
 //  Created by Andrey Vasiliev on 12.10.2024.
@@ -8,43 +8,36 @@
 import UIKit
 
 extension NewsViewController {
-    final class NewsItemTableViewCell: UITableViewCell {
-        override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-            super.init(style: style, reuseIdentifier: reuseIdentifier)
+    final class NewsItemCollectionViewCell: UICollectionViewCell {
+        override init(frame: CGRect) {
+            super.init(frame: frame)
 
-            backgroundColor = nil
-            selectedBackgroundView = .init().then {
-                $0.backgroundColor = .init(red: 0.898, green: 0.898, blue: 0.898, alpha: 1.0)
-            }
+            contentView.backgroundColor = .white
+            contentView.layer.cornerRadius = 20
+            contentView.layer.borderWidth = 1
+            contentView.layer.borderColor = UIColor(red: 0.906, green: 0.926, blue: 0.946, alpha: 1).cgColor
 
             func addSubviews() {
-                contentView.addSubview(rootView)
-                rootView.addSubview(stackView)
+                contentView.addSubview(stackView)
                 [titleImageView, titleLabel].forEach(stackView.addArrangedSubview)
             }
 
             func setConstraints() {
                 NSLayoutConstraint.activate([
-                    rootView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-                    rootView.topAnchor.constraint(equalTo: contentView.topAnchor),
-                    rootView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-                    rootView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
+                    stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                    stackView.topAnchor.constraint(equalTo: contentView.topAnchor),
+                    stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                    stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
 
-
-                    stackView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
-                    stackView.topAnchor.constraint(equalTo: rootView.topAnchor),
-                    stackView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
-                    stackView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
-
-                    titleImageView.widthAnchor.constraint(equalToConstant: 100),
-                    titleImageView.heightAnchor.constraint(equalToConstant: 100)
+                    titleImageView.widthAnchor.constraint(equalToConstant: 116),
+                    titleImageView.heightAnchor.constraint(equalToConstant: 116)
                 ])
             }
 
             addSubviews()
             setConstraints()
         }
-
+        
         @available(*, unavailable)
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
@@ -58,21 +51,17 @@ extension NewsViewController {
             titleImageView.image = UIImage(named: "placeholder")
         }
 
-        override func setSelected(_ selected: Bool, animated: Bool) {
-            rootView.backgroundColor = selected ? .init(red: 1.0, green: 0.9, blue: 0.9, alpha: 1.0) : UIColor.white
-        }
-
-        override func setHighlighted(_ highlighted: Bool, animated: Bool) {
-            rootView.backgroundColor = isSelected || highlighted ? .init(red: 1.0, green: 0.9, blue: 0.9, alpha: 1.0) : UIColor.white
-        }
-
-        private let rootView = UIView().then {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            $0.clipsToBounds = true
-            $0.backgroundColor = .white
-            $0.layer.cornerRadius = 20
-            $0.layer.borderWidth = 1
-            $0.layer.borderColor = UIColor(red: 0.906, green: 0.926, blue: 0.946, alpha: 1).cgColor
+        override var isSelected: Bool {
+            didSet {
+                UIView.animate(withDuration: 0.3) {
+                    self.contentView.backgroundColor = self.isSelected ?
+                        .init(red: 1.0, green: 0.9, blue: 0.9, alpha: 1.0) :
+                        UIColor.white
+                    self.transform = self.isSelected ?
+                        CGAffineTransform(scaleX: 0.9, y: 0.9) :
+                        CGAffineTransform(scaleX: 1.0, y: 1.0)
+                }
+            }
         }
 
         private let stackView = UIStackView().then {

@@ -39,18 +39,37 @@ final class NewsViewController: UIViewController {
         $0.font = .systemFont(ofSize: 17, weight: .regular)
     }
 
-    private let tableView = UITableView(frame: .zero).then {
+    private let collectionView = UICollectionView(
+        frame: .zero,
+        collectionViewLayout: {
+            let spacing: CGFloat = 20
+            let itemSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .fractionalHeight(1.0))
+            let item = NSCollectionLayoutItem(layoutSize: itemSize)
+
+            let groupSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .absolute(180))
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+            group.interItemSpacing = .fixed(spacing)
+
+            let section = NSCollectionLayoutSection(group: group)
+            section.contentInsets = .init(top: spacing, leading: 16, bottom: spacing, trailing: 16)
+            section.interGroupSpacing = spacing
+
+            let layout = UICollectionViewCompositionalLayout(section: section)
+            return layout
+        }()
+    ).then {
         $0.translatesAutoresizingMaskIntoConstraints = false
-        $0.allowsSelection = true
-        $0.separatorStyle = .none
         $0.backgroundColor = nil
-        $0.bouncesZoom = false
-        $0.showsVerticalScrollIndicator = true
         $0.showsHorizontalScrollIndicator = false
-        $0.alwaysBounceHorizontal = false
+        $0.alwaysBounceVertical = true
+        $0.bouncesZoom = false
         $0.register(
-            NewsItemTableViewCell.self,
-            forCellReuseIdentifier: String(describing: NewsItemTableViewCell.self)
+            NewsItemCollectionViewCell.self,
+            forCellWithReuseIdentifier: String(describing: NewsItemCollectionViewCell.self)
         )
     }
 
@@ -70,7 +89,7 @@ final class NewsViewController: UIViewController {
         view.backgroundColor = .init(red: 0.898, green: 0.898, blue: 0.898, alpha: 1.0)
 
         func addSubviews() {
-            [tableView, loadingTitle].forEach(view.addSubview)
+            [collectionView, loadingTitle].forEach(view.addSubview)
         }
 
         func setConstraints() {
@@ -78,14 +97,14 @@ final class NewsViewController: UIViewController {
                 loadingTitle.centerXAnchor.constraint(equalTo: view.centerXAnchor),
                 loadingTitle.centerYAnchor.constraint(equalTo: view.centerYAnchor),
 
-                tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-                tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+                collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
             ])
         }
 
-        tableView.delegate = self
+        collectionView.delegate = self
 
         func bind() {
             let output = viewModel.transform(.init(selection: selection, currentPage: currentPage))
@@ -106,12 +125,12 @@ final class NewsViewController: UIViewController {
         switch state {
         case .loading:
             loadingTitle.isHidden = false
-            tableView.isHidden = true
+            collectionView.isHidden = true
         case .success(let newsItems):
             self.newsItems.append(contentsOf: newsItems)
 
             loadingTitle.isHidden = true
-            tableView.isHidden = false
+            collectionView.isHidden = false
 
             var snapshot = NSDiffableDataSourceSnapshot<Section, NewsModel.NewsItem>()
             snapshot.appendSections(Section.allCases)
@@ -119,24 +138,24 @@ final class NewsViewController: UIViewController {
             dataSource.apply(snapshot, animatingDifferences: true)
         case .noResults:
             loadingTitle.isHidden = false
-            tableView.isHidden = true
+            collectionView.isHidden = true
         case .failure:
             loadingTitle.isHidden = false
-            tableView.isHidden = true
+            collectionView.isHidden = true
         }
     }
 
-    private func makeDataSource() -> UITableViewDiffableDataSource<Section, NewsModel.NewsItem> {
-        .init(tableView: tableView) { [unowned self] tableView, indexPath, itemIdentifier in
-            guard let cell = tableView.dequeueReusableCell(
-                withIdentifier: String(describing: NewsItemTableViewCell.self),
+    private func makeDataSource() -> UICollectionViewDiffableDataSource<Section, NewsModel.NewsItem> {
+        .init(collectionView: collectionView) { [unowned self] collectionView, indexPath, itemIdentifier in
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: String(describing: NewsItemCollectionViewCell.self),
                 for: indexPath
-            ) as? NewsItemTableViewCell
+            ) as? NewsItemCollectionViewCell
             else {
                 fatalError("Invalid cell")
             }
 
-            if (indexPath.row + 1) == self.newsItems.count {
+            if (indexPath.row + 1) == newsItems.count {
                 currentPage.send(currentPage.value + 1)
             }
 
@@ -147,16 +166,18 @@ final class NewsViewController: UIViewController {
     }
 }
 
-extension NewsViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { 190 }
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+extension NewsViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
         let snapshot = dataSource.snapshot()
-        selection.send(snapshot.itemIdentifiers[indexPath.row])
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.selection.send(snapshot.itemIdentifiers[indexPath.row])
+        }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            tableView.deselectRow(at: indexPath, animated: true)
+            collectionView.deselectItem(at: indexPath, animated: true)
         }
     }
 }

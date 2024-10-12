@@ -25,6 +25,16 @@ final class NewsDetailsViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    private let scrollView = UIScrollView().then {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        $0.showsVerticalScrollIndicator = true
+        $0.showsHorizontalScrollIndicator = false
+        $0.backgroundColor = .white
+        $0.alwaysBounceVertical = true
+        $0.alwaysBounceHorizontal = false
+        $0.bouncesZoom = false
+    }
+
     private let stackView = UIStackView().then {
         $0.translatesAutoresizingMaskIntoConstraints = false
         $0.layoutMargins = UIEdgeInsets(top: 32, left: 16, bottom: 32, right: 16)
@@ -81,15 +91,24 @@ final class NewsDetailsViewController: UIViewController {
         view.backgroundColor = .white
 
         func addSubviews() {
-            view.addSubview(stackView)
+            view.addSubview(scrollView)
+            scrollView.addSubview(stackView)
             [titleLabel, categoryTypeLabel, publishedDateLabel, titleImageView, descriptionLabel].forEach(stackView.addArrangedSubview)
         }
 
         func setContraints() {
             NSLayoutConstraint.activate([
-                stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                stackView.topAnchor.constraint(equalTo: view.topAnchor),
-                stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+                scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+                scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+                stackView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+                stackView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+                stackView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+                stackView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+                stackView.widthAnchor.constraint(equalTo: scrollView.widthAnchor).then { $0.priority = .required },
+                stackView.heightAnchor.constraint(equalTo: scrollView.heightAnchor).then { $0.priority = .defaultLow },
 
                 titleImageView.heightAnchor.constraint(equalToConstant: 200)
             ])
