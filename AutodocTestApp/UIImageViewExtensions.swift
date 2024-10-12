@@ -31,7 +31,7 @@ extension UIImageView {
     }
 
     func makeImageLoadingTask(_ imageUrl: URL, with imageCache: NSCache<NSString, UIImage>, animate: Bool = true) -> Task<Void, Error> {
-        return Task {
+        Task {
             let (data, _) = try await URLSession.shared.data(from: imageUrl)
             guard let image = UIImage(data: data) else {
                 throw ImageLoadingError.invalidData

@@ -24,7 +24,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let viewModel = NewsViewModel(router: router)
             let viewController = NewsViewController(viewModel: viewModel)
             router.viewController = viewController
-            let navigationController = AutodocNavigationController(rootViewController: viewController)
+            let navigationController = UINavigationController(rootViewController: viewController)
             result.rootViewController = navigationController
             return result
         }()

@@ -74,7 +74,7 @@ final class NewsDetailsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "News Details"
+        navigationItem.largeTitleDisplayMode = .never
 
         guard let view = view else { return }
 
