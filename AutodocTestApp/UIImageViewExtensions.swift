@@ -14,13 +14,13 @@ extension UIImageView {
     func setImage(by url: URL, animate: Bool = true) async throws {
         let image = try await Self.imageLoader.loadImage(by: url)
 
-        if !Task.isCancelled {
-            alpha = animate ? 0.0 : 1.0
-            self.image = image
-            if animate {
-                UIView.animate(withDuration: 0.3) {
-                    self.alpha = 1.0
-                }
+        guard !Task.isCancelled else { return }
+
+        alpha = animate ? 0.0 : 1.0
+        self.image = image
+        if animate {
+            UIView.animate(withDuration: 0.3) {
+                self.alpha = 1.0
             }
         }
     }

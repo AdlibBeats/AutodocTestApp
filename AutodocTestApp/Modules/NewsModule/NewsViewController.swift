@@ -81,8 +81,7 @@ final class NewsViewController: UIViewController {
             navigationController.navigationBar.tintColor = .black
         }
 
-        navigationItem.title = "Новости"
-        navigationItem.largeTitleDisplayMode = .automatic
+        title = "Новости"
 
         guard let view = view else { return }
 
