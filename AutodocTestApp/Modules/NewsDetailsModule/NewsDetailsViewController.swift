@@ -79,7 +79,7 @@ final class NewsDetailsViewController: UIViewController {
         $0.numberOfLines = 0
     }
 
-    private let imageCache = NSCache<NSString, UIImage>()
+    private var loadTitleImageTask: Task<Void, Never>?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -135,14 +135,16 @@ final class NewsDetailsViewController: UIViewController {
                 publishedDateLabel.text = DateFormatter().then { $0.dateFormat = "dd.MM.yyyy" }.string(from: publishedDate)
             }
 
-            if let titleImageUrl = newsItem.titleImageUrl, let imageUrl = URL(string: titleImageUrl) {
-                if let imageFromCache = imageCache.object(forKey: imageUrl.absoluteString as NSString) {
-                    titleImageView.image = imageFromCache
-                } else {
-                    titleImageView.setImage(imageUrl, with: imageCache)
+            loadTitleImageTask = Task { [weak self] in
+                do {
+                    guard let titleImageUrl = newsItem.titleImageUrl else {
+                        throw URLError(.cannotDecodeContentData)
+                    }
+
+                    try await self?.titleImageView.setImage(by: titleImageUrl)
+                } catch {
+                    self?.titleImageView.isHidden = true
                 }
-            } else {
-                titleImageView.isHidden = true
             }
 
             descriptionLabel.text = newsItem.description

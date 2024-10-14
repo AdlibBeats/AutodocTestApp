@@ -46,7 +46,7 @@ extension NewsViewController {
         override func prepareForReuse() {
             super.prepareForReuse()
 
-            titleImageLoadingTask?.cancel()
+            loadTitleImageTask?.cancel()
             titleLabel.text = ""
             titleImageView.image = UIImage(named: "placeholder")
         }
@@ -88,24 +88,22 @@ extension NewsViewController {
             $0.clipsToBounds = true
         }
 
-        private let imageCache = NSCache<NSString, UIImage>()
-        private var titleImageLoadingTask: Task<Void, Error>?
+        private var loadTitleImageTask: Task<Void, Never>?
 
-        func bind(to newsItem: NewsModel.NewsItem) {
-            func setTitleImageUrl() {
-                if let titleImageUrl = newsItem.titleImageUrl, let imageUrl = URL(string: titleImageUrl) {
-                    if let imageFromCache = imageCache.object(forKey: imageUrl.absoluteString as NSString) {
-                        titleImageView.image = imageFromCache
-                    } else {
-                        titleImageLoadingTask = titleImageView.makeImageLoadingTask(imageUrl, with: imageCache)
+        func bind(to newsItem: NewsEntity.NewsItem) {
+            titleLabel.text = newsItem.title
+
+            loadTitleImageTask = Task { [weak self] in
+                do {
+                    guard let titleImageUrl = newsItem.titleImageUrl else {
+                        throw URLError(.cannotDecodeContentData)
                     }
-                } else {
-                    titleImageView.image = UIImage(named: "placeholder")
+
+                    try await self?.titleImageView.setImage(by: titleImageUrl)
+                } catch {
+                    self?.titleImageView.image = UIImage(named: "placeholder")
                 }
             }
-
-            titleLabel.text = newsItem.title
-            setTitleImageUrl()
         }
     }
 }

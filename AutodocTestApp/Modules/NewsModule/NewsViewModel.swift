@@ -15,12 +15,15 @@ protocol NewsViewModelProtocol: AnyObject {
 }
 
 final class NewsViewModel {
-    private let fetcher: NewsFetcher
+    private let networkService: NetworkServiceProtocol
     private let router: NewsRouterProtocol
 
-    init(router: NewsRouterProtocol, fetcher: NewsFetcher = NetworkService()) {
+    init(
+        router: NewsRouterProtocol,
+        networkService: NetworkServiceProtocol = NetworkService()
+    ) {
+        self.networkService = networkService
         self.router = router
-        self.fetcher = fetcher
     }
 
     private var subscriptions = Set<AnyCancellable>()
@@ -35,10 +38,10 @@ extension NewsViewModel: NewsViewModelProtocol {
             .sink(receiveValue: { [router] value in
                 router.showNewsDetails.send(value)
             }).store(in: &subscriptions)
-        input.currentPage.sink(receiveValue: { [fetcher] value in
+        input.currentPage.sink(receiveValue: { [networkService] value in
             Task {
                 do {
-                    newsItems.send(.success(try await fetcher.fetchNews(from: value).news))
+                    newsItems.send(.success(try await networkService.fetchNews(from: value)))
                 } catch {
                     newsItems.send(.failure(error))
                 }
@@ -54,13 +57,13 @@ extension NewsViewModel: NewsViewModelProtocol {
 extension NewsViewModel {
     enum NewsState {
         case loading
-        case success([NewsModel.NewsItem])
+        case success([NewsEntity.NewsItem])
         case noResults
         case failure(Error)
     }
 
     struct Input {
-        let selection: PassthroughSubject<NewsModel.NewsItem, Never>
+        let selection: PassthroughSubject<NewsEntity.NewsItem, Never>
         let currentPage: CurrentValueSubject<Int, Never>
     }
 

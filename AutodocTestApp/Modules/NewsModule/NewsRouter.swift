@@ -9,13 +9,13 @@ import UIKit
 import Combine
 
 protocol NewsRouterProtocol: AnyObject {
-    var showNewsDetails: PassthroughSubject<NewsModel.NewsItem, Never> { get }
+    var showNewsDetails: PassthroughSubject<NewsEntity.NewsItem, Never> { get }
 }
 
 final class NewsRouter: NewsRouterProtocol {
     private var subscriptions = Set<AnyCancellable>()
 
-    let showNewsDetails = PassthroughSubject<NewsModel.NewsItem, Never>()
+    let showNewsDetails = PassthroughSubject<NewsEntity.NewsItem, Never>()
 
     weak var viewController: UIViewController?
 

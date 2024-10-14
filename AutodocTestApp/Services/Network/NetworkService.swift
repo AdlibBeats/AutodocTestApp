@@ -2,38 +2,28 @@
 //  NetworkService.swift
 //  AutodocTestApp
 //
-//  Created by Andrey Vasiliev on 09.10.2024.
+//  Created by Andrey Vasiliev on 14.10.2024.
 //
 
 import Foundation
 
-protocol NewsFetcher: AnyObject {
-    func fetchNews(from page: Int) async throws -> NewsModel
+protocol NetworkServiceProtocol: AnyActor {
+    func fetchNews(from page: Int) async throws -> [NewsEntity.NewsItem]
 }
 
-final class NetworkService {
-    enum NetworkServiceError: Error {
-        case invalidURL
-        case missingData
-    }
-
-    private let baseUrl = "https://webapi.autodoc.ru/api"
-
-    private let urlSession: URLSession
-
-    init(configuration: URLSessionConfiguration = .default) {
-        urlSession = .init(configuration: configuration)
-    }
+actor NetworkService {
+    private let baseUrlString = "https://webapi.autodoc.ru/api"
 }
 
-extension NetworkService: NewsFetcher {
-    func fetchNews(from page: Int) async throws -> NewsModel {
+extension NetworkService: NetworkServiceProtocol {
+    func fetchNews(from page: Int) async throws -> [NewsEntity.NewsItem] {
         let maxCount = 15
-        guard let url = URL(string: [baseUrl, "/news", "/\(page)", "/\(maxCount)"].joined()) else {
-            throw NetworkServiceError.invalidURL
+        guard let url = URL(string: [baseUrlString, "/news", "/\(page)", "/\(maxCount)"].joined()) else {
+            throw URLError(.badURL)
         }
 
         let (data, _) = try await URLSession.shared.data(from: url)
-        return try JSONDecoder().decode(NewsModel.self, from: data)
+        let model = try JSONDecoder().decode(NewsEntity.self, from: data)
+        return model.news
     }
 }

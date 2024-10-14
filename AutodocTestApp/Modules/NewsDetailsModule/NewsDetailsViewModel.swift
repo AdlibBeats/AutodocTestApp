@@ -17,9 +17,9 @@ protocol NewsDetailsViewModelProtocol: AnyObject {
 }
 
 final class NewsDetailsViewModel {
-    private let newsItem: NewsModel.NewsItem
+    private let newsItem: NewsEntity.NewsItem
 
-    init(newsItem: NewsModel.NewsItem) {
+    init(newsItem: NewsEntity.NewsItem) {
         self.newsItem = newsItem
     }
 
@@ -28,7 +28,7 @@ final class NewsDetailsViewModel {
 
 extension NewsDetailsViewModel {
     enum NewsState {
-        case render(NewsModel.NewsItem)
+        case render(NewsEntity.NewsItem)
     }
 
     struct Input {

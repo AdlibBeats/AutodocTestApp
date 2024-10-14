@@ -17,7 +17,7 @@ final class NewsViewController: UIViewController {
 
     private var subscriptions = Set<AnyCancellable>()
     private let viewModel: ViewModel
-    private let selection = PassthroughSubject<NewsModel.NewsItem, Never>()
+    private let selection = PassthroughSubject<NewsEntity.NewsItem, Never>()
     private let currentPage = CurrentValueSubject<Int, Never>(1)
     private lazy var dataSource = makeDataSource()
 
@@ -119,7 +119,7 @@ final class NewsViewController: UIViewController {
         bind()
     }
 
-    private var newsItems: [NewsModel.NewsItem] = []
+    private var newsItems: [NewsEntity.NewsItem] = []
 
     private func render(_ state: NewsViewModel.NewsState) {
         switch state {
@@ -132,7 +132,7 @@ final class NewsViewController: UIViewController {
             loadingTitle.isHidden = true
             collectionView.isHidden = false
 
-            var snapshot = NSDiffableDataSourceSnapshot<Section, NewsModel.NewsItem>()
+            var snapshot = NSDiffableDataSourceSnapshot<Section, NewsEntity.NewsItem>()
             snapshot.appendSections(Section.allCases)
             snapshot.appendItems(self.newsItems, toSection: .main)
             dataSource.apply(snapshot, animatingDifferences: true)
@@ -145,7 +145,7 @@ final class NewsViewController: UIViewController {
         }
     }
 
-    private func makeDataSource() -> UICollectionViewDiffableDataSource<Section, NewsModel.NewsItem> {
+    private func makeDataSource() -> UICollectionViewDiffableDataSource<Section, NewsEntity.NewsItem> {
         .init(collectionView: collectionView) { [unowned self] collectionView, indexPath, itemIdentifier in
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: String(describing: NewsItemCollectionViewCell.self),
