@@ -135,9 +135,6 @@ final class NewsViewController: UIViewController {
             snapshot.appendSections(Section.allCases)
             snapshot.appendItems(self.newsItems, toSection: .main)
             dataSource.apply(snapshot, animatingDifferences: true)
-        case .noResults:
-            loadingTitle.isHidden = false
-            collectionView.isHidden = true
         case .failure:
             loadingTitle.isHidden = false
             collectionView.isHidden = true

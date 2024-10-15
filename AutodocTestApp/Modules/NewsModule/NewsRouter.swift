@@ -5,8 +5,9 @@
 //  Created by Andrey Vasiliev on 10.10.2024.
 //
 
-import UIKit
 import Combine
+
+import class UIKit.UIViewController
 
 protocol NewsRouterProtocol: AnyObject {
     var showNewsDetails: PassthroughSubject<NewsEntity.NewsItem, Never> { get }

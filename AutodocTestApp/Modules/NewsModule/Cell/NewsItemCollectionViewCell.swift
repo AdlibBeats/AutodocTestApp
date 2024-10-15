@@ -51,17 +51,30 @@ extension NewsViewController {
             titleImageView.image = UIImage(named: "placeholder")
         }
 
+        override var isHighlighted: Bool {
+            didSet {
+                updateSelectionState(with: isSelected || isHighlighted)
+            }
+        }
+
         override var isSelected: Bool {
             didSet {
-                UIView.animate(withDuration: 0.3) {
-                    self.contentView.backgroundColor = self.isSelected ?
-                        .init(red: 1.0, green: 0.9, blue: 0.9, alpha: 1.0) :
-                        UIColor.white
-                    self.transform = self.isSelected ?
-                        CGAffineTransform(scaleX: 0.9, y: 0.9) :
-                        CGAffineTransform(scaleX: 1.0, y: 1.0)
+                updateSelectionState(with: isSelected)
+            }
+        }
+
+        private func updateSelectionState(with state: Bool, animate: Bool = true) {
+            func setValues() {
+                if state {
+                    contentView.backgroundColor = .init(red: 1.0, green: 0.9, blue: 0.9, alpha: 1.0)
+                    transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+                } else {
+                    contentView.backgroundColor = .white
+                    transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
                 }
             }
+
+            animate ? UIView.animate(withDuration: 0.3) { setValues() } : setValues()
         }
 
         private let stackView = UIStackView().then {

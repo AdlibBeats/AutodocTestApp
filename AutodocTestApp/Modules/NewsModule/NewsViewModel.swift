@@ -34,11 +34,8 @@ extension NewsViewModel: NewsViewModelProtocol {
         let initialState = Just(NewsState.loading).eraseToAnyPublisher()
         let newsItems = PassthroughSubject<NewsState, Never>()
 
-        input.selection
-            .sink(receiveValue: { [router] value in
-                router.showNewsDetails.send(value)
-            }).store(in: &subscriptions)
-        input.currentPage.sink(receiveValue: { [networkService] value in
+        input.selection.bind(to: router.showNewsDetails).store(in: &subscriptions)
+        input.currentPage.sink { [networkService] value in
             Task {
                 do {
                     newsItems.send(.success(try await networkService.fetchNews(from: value)))
@@ -46,11 +43,9 @@ extension NewsViewModel: NewsViewModelProtocol {
                     newsItems.send(.failure(error))
                 }
             }
-        }).store(in: &subscriptions)
+        }.store(in: &subscriptions)
 
-        let output = Output(state: Publishers.Merge(initialState, newsItems).removeDuplicates().eraseToAnyPublisher())
-
-        return output
+        return Output(state: Publishers.Merge(initialState, newsItems).removeDuplicates().eraseToAnyPublisher())
     }
 }
 
@@ -58,7 +53,6 @@ extension NewsViewModel {
     enum NewsState {
         case loading
         case success([NewsEntity.NewsItem])
-        case noResults
         case failure(Error)
     }
 
@@ -77,7 +71,6 @@ extension NewsViewModel.NewsState: Equatable {
         switch (lhs, rhs) {
         case (.loading, .loading): return true
         case (.success(let lhsNews), .success(let rhsNews)): return lhsNews == rhsNews
-        case (.noResults, .noResults): return true
         case (.failure, .failure): return true
         default: return false
         }
