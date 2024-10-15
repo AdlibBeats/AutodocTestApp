@@ -35,15 +35,14 @@ extension NewsViewModel: NewsViewModelProtocol {
         let newsItems = PassthroughSubject<NewsState, Never>()
 
         input.selection.bind(to: router.showNewsDetails).store(in: &subscriptions)
-        input.currentPage.sink { [networkService] value in
-            Task {
-                do {
-                    newsItems.send(.success(try await networkService.fetchNews(from: value)))
-                } catch {
-                    newsItems.send(.failure(error))
-                }
+        input.currentPage
+            .mapAsyncThrows { [networkService] in
+                try await networkService.fetchNews(from: $0)
             }
-        }.store(in: &subscriptions)
+            .map { .success($0) }
+            .catch { Just(NewsState.failure($0)) }
+            .sink(receiveValue: newsItems.send)
+            .store(in: &subscriptions)
 
         return Output(state: Publishers.Merge(initialState, newsItems).removeDuplicates().eraseToAnyPublisher())
     }

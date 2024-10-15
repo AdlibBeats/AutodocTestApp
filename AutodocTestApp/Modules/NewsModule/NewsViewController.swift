@@ -136,6 +136,7 @@ final class NewsViewController: UIViewController {
             snapshot.appendItems(self.newsItems, toSection: .main)
             dataSource.apply(snapshot, animatingDifferences: true)
         case .failure:
+            loadingTitle.text = "Something went wrong."
             loadingTitle.isHidden = false
             collectionView.isHidden = true
         }
