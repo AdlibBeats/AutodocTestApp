@@ -32,7 +32,6 @@ extension NewsEntity.NewsItem {
 
     var titleImageUrl: URL? {
         guard let titleImageUrlString = titleImageUrlString else { return nil }
-
         return URL(string: titleImageUrlString)
     }
 }

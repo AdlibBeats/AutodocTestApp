@@ -39,6 +39,7 @@ extension NewsViewModel: NewsViewModelProtocol {
             .mapAsyncThrows { [networkService] in
                 try await networkService.fetchNews(from: $0)
             }
+            .scan([]) { $0 + $1 }
             .map { .success($0) }
             .catch { Just(NewsState.failure($0)) }
             .sink(receiveValue: newsItems.send)

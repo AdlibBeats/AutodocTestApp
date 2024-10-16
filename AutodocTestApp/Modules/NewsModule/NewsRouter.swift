@@ -23,12 +23,12 @@ final class NewsRouter: NewsRouterProtocol {
     init() {
         func bind() {
             showNewsDetails
-                .sink(receiveValue: { [weak self] value in
-                    let newsDetailsViewModel = NewsDetailsViewModel(newsItem: value)
+                .sink { [weak self] in
+                    let newsDetailsViewModel = NewsDetailsViewModel(newsItem: $0)
                     let newsDetailsViewController = NewsDetailsViewController(viewModel: newsDetailsViewModel)
 
                     self?.viewController?.navigationController?.pushViewController(newsDetailsViewController, animated: true)
-                })
+                }
                 .store(in: &subscriptions)
         }
 

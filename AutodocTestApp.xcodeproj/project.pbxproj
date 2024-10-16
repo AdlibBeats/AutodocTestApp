@@ -74,6 +74,16 @@
 			path = Cell;
 			sourceTree = "<group>";
 		};
+		495DA1312CBF4185001C6018 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				495DA12F2CBE7230001C6018 /* PublisherExtensions.swift */,
+				490A6E042CB748A200D66459 /* ThenExtensions.swift */,
+				49DCC9152CBDA6EA00A4C26B /* UIImageViewExtensions.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
 		4980B3692CB681E4002E9CF6 = {
 			isa = PBXGroup;
 			children = (
@@ -93,16 +103,14 @@
 		4980B3742CB681E5002E9CF6 /* AutodocTestApp */ = {
 			isa = PBXGroup;
 			children = (
-				490A6E042CB748A200D66459 /* ThenExtensions.swift */,
-				49DCC9152CBDA6EA00A4C26B /* UIImageViewExtensions.swift */,
-				495DA12F2CBE7230001C6018 /* PublisherExtensions.swift */,
-				4980B38B2CB686F6002E9CF6 /* Modules */,
-				4980B38A2CB686E8002E9CF6 /* Services */,
+				4980B3832CB681E7002E9CF6 /* Info.plist */,
 				4980B3752CB681E5002E9CF6 /* AppDelegate.swift */,
 				4980B3772CB681E5002E9CF6 /* SceneDelegate.swift */,
 				4980B37E2CB681E7002E9CF6 /* Assets.xcassets */,
 				4980B3802CB681E7002E9CF6 /* LaunchScreen.storyboard */,
-				4980B3832CB681E7002E9CF6 /* Info.plist */,
+				495DA1312CBF4185001C6018 /* Extensions */,
+				4980B38B2CB686F6002E9CF6 /* Modules */,
+				4980B38A2CB686E8002E9CF6 /* Services */,
 			);
 			path = AutodocTestApp;
 			sourceTree = "<group>";
@@ -128,9 +136,9 @@
 			isa = PBXGroup;
 			children = (
 				4944568C2CBAFA6400E17741 /* Cell */,
+				490A6E082CB85C3000D66459 /* NewsRouter.swift */,
 				4911B9A72CB728E9008DB394 /* NewsViewController.swift */,
 				4911B9A92CB72933008DB394 /* NewsViewModel.swift */,
-				490A6E082CB85C3000D66459 /* NewsRouter.swift */,
 			);
 			path = NewsModule;
 			sourceTree = "<group>";
@@ -139,8 +147,8 @@
 			isa = PBXGroup;
 			children = (
 				4980B3912CB68767002E9CF6 /* Entities */,
-				49DCC90E2CBD90FE00A4C26B /* NetworkService.swift */,
 				49DCC9102CBDA15300A4C26B /* ImageLoaderService.swift */,
+				49DCC90E2CBD90FE00A4C26B /* NetworkService.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";

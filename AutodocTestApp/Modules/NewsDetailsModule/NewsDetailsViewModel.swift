@@ -20,8 +20,6 @@ final class NewsDetailsViewModel {
     init(newsItem: NewsEntity.NewsItem) {
         self.newsItem = newsItem
     }
-
-    private var subscriptions = Set<AnyCancellable>()
 }
 
 extension NewsDetailsViewModel {

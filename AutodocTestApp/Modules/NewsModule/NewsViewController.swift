@@ -76,16 +76,17 @@ final class NewsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        title = "Новости"
+
         if let navigationController = navigationController {
             navigationController.navigationBar.prefersLargeTitles = true
             navigationController.navigationBar.tintColor = .black
         }
 
-        title = "Новости"
-
         guard let view = view else { return }
 
         view.backgroundColor = .init(red: 0.898, green: 0.898, blue: 0.898, alpha: 1.0)
+        collectionView.delegate = self
 
         func addSubviews() {
             [collectionView, loadingTitle].forEach(view.addSubview)
@@ -103,8 +104,6 @@ final class NewsViewController: UIViewController {
             ])
         }
 
-        collectionView.delegate = self
-
         func bind() {
             let output = viewModel.transform(.init(selection: selection, currentPage: currentPage))
             output.state
@@ -118,22 +117,18 @@ final class NewsViewController: UIViewController {
         bind()
     }
 
-    private var newsItems: [NewsEntity.NewsItem] = []
-
     private func render(_ state: NewsViewModel.NewsState) {
         switch state {
         case .loading:
             loadingTitle.isHidden = false
             collectionView.isHidden = true
         case .success(let newsItems):
-            self.newsItems.append(contentsOf: newsItems)
-
             loadingTitle.isHidden = true
             collectionView.isHidden = false
 
             var snapshot = NSDiffableDataSourceSnapshot<Section, NewsEntity.NewsItem>()
             snapshot.appendSections(Section.allCases)
-            snapshot.appendItems(self.newsItems, toSection: .main)
+            snapshot.appendItems(newsItems, toSection: .main)
             dataSource.apply(snapshot, animatingDifferences: true)
         case .failure:
             loadingTitle.text = "Something went wrong."
@@ -143,7 +138,15 @@ final class NewsViewController: UIViewController {
     }
 
     private func makeDataSource() -> UICollectionViewDiffableDataSource<Section, NewsEntity.NewsItem> {
-        .init(collectionView: collectionView) { [unowned self] collectionView, indexPath, itemIdentifier in
+        func sendNewPage(by indexPath: IndexPath) {
+            let snapshot = dataSource.snapshot()
+
+            if (indexPath.item + 1) == snapshot.itemIdentifiers.count {
+                currentPage.send(currentPage.value + 1)
+            }
+        }
+
+        return .init(collectionView: collectionView) { collectionView, indexPath, itemIdentifier in
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: String(describing: NewsItemCollectionViewCell.self),
                 for: indexPath
@@ -152,10 +155,7 @@ final class NewsViewController: UIViewController {
                 fatalError("Invalid cell")
             }
 
-            if (indexPath.row + 1) == newsItems.count {
-                currentPage.send(currentPage.value + 1)
-            }
-
+            sendNewPage(by: indexPath)
             cell.bind(to: itemIdentifier)
 
             return cell
@@ -170,7 +170,7 @@ extension NewsViewController: UICollectionViewDelegate {
         let snapshot = dataSource.snapshot()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.selection.send(snapshot.itemIdentifiers[indexPath.row])
+            self.selection.send(snapshot.itemIdentifiers[indexPath.item])
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {

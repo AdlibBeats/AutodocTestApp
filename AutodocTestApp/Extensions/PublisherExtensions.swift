@@ -40,11 +40,10 @@ extension Publisher {
             }
         }
     }
-
 }
 
 extension Publisher where Self.Failure == Never {
-    func bind<S: Subject<Output, Failure>>(to subject: S) -> AnyCancellable {
+    func bind<T: Subject<Output, Failure>>(to subject: T) -> AnyCancellable {
         sink { subject.send($0) }
     }
 }

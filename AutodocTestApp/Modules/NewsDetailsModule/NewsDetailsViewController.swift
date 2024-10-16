@@ -135,15 +135,15 @@ final class NewsDetailsViewController: UIViewController {
                 publishedDateLabel.text = DateFormatter().then { $0.dateFormat = "dd.MM.yyyy" }.string(from: publishedDate)
             }
 
-            loadTitleImageTask = Task { [weak self] in
+            loadTitleImageTask = Task { [titleImageView] in
                 do {
                     guard let titleImageUrl = newsItem.titleImageUrl else {
                         throw URLError(.cannotDecodeContentData)
                     }
 
-                    try await self?.titleImageView.setImage(by: titleImageUrl)
+                    try await titleImageView.setImage(by: titleImageUrl)
                 } catch {
-                    self?.titleImageView.isHidden = true
+                    titleImageView.isHidden = true
                 }
             }
 
