@@ -17,9 +17,28 @@ final class NewsViewController: UIViewController {
 
     private var subscriptions = Set<AnyCancellable>()
     private let viewModel: ViewModel
-    private let selection = PassthroughSubject<NewsEntity.NewsItem, Never>()
-    private let currentPage = CurrentValueSubject<Int, Never>(1)
-    private lazy var dataSource = makeDataSource()
+
+    private let cellRegistration = UICollectionView.CellRegistration<NewsItemCollectionViewCell, NewsEntity.NewsItem> { cell, _, itemIdentifier in
+        cell.bind(to: itemIdentifier)
+    }
+
+    private lazy var dataSource: UICollectionViewDiffableDataSource<Section, NewsEntity.NewsItem> = {
+        func setNewPage(by indexPath: IndexPath) {
+            let snapshot = dataSource.snapshot()
+
+            if (indexPath.item + 1) == snapshot.itemIdentifiers.count {
+                viewModel.currentPage += 1
+            }
+        }
+
+        return .init(collectionView: collectionView) { [cellRegistration] collectionView, indexPath, itemIdentifier in
+            collectionView.dequeueConfiguredReusableCell(
+                using: cellRegistration,
+                for: indexPath,
+                item: itemIdentifier
+            ).then { _ in setNewPage(by: indexPath) }
+        }
+    }()
 
     init(viewModel: ViewModel) {
         self.viewModel = viewModel
@@ -52,13 +71,15 @@ final class NewsViewController: UIViewController {
                 widthDimension: .fractionalWidth(1.0),
                 heightDimension: .absolute(180))
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-            group.interItemSpacing = .fixed(spacing)
 
             let section = NSCollectionLayoutSection(group: group)
-            section.contentInsets = .init(top: spacing, leading: 16, bottom: spacing, trailing: 16)
             section.interGroupSpacing = spacing
 
-            let layout = UICollectionViewCompositionalLayout(section: section)
+            let config = UICollectionViewCompositionalLayoutConfiguration()
+            config.interSectionSpacing = 20
+            config.contentInsetsReference = .layoutMargins
+
+            let layout = UICollectionViewCompositionalLayout(section: section, configuration: config)
             return layout
         }()
     ).then {
@@ -67,10 +88,6 @@ final class NewsViewController: UIViewController {
         $0.showsHorizontalScrollIndicator = false
         $0.alwaysBounceVertical = true
         $0.bouncesZoom = false
-        $0.register(
-            NewsItemCollectionViewCell.self,
-            forCellWithReuseIdentifier: String(describing: NewsItemCollectionViewCell.self)
-        )
     }
 
     override func viewDidLoad() {
@@ -105,8 +122,7 @@ final class NewsViewController: UIViewController {
         }
 
         func bind() {
-            let output = viewModel.transform(.init(selection: selection, currentPage: currentPage))
-            output.state
+            viewModel.state
                 .receive(on: RunLoop.main)
                 .sink(receiveValue: render)
                 .store(in: &subscriptions)
@@ -122,43 +138,18 @@ final class NewsViewController: UIViewController {
         case .loading:
             loadingTitle.isHidden = false
             collectionView.isHidden = true
-        case .success(let newsItems):
+        case .success(let items):
             loadingTitle.isHidden = true
             collectionView.isHidden = false
 
             var snapshot = NSDiffableDataSourceSnapshot<Section, NewsEntity.NewsItem>()
             snapshot.appendSections(Section.allCases)
-            snapshot.appendItems(newsItems, toSection: .main)
+            snapshot.appendItems(items, toSection: .main)
             dataSource.apply(snapshot, animatingDifferences: true)
         case .failure:
             loadingTitle.text = "Something went wrong."
             loadingTitle.isHidden = false
             collectionView.isHidden = true
-        }
-    }
-
-    private func makeDataSource() -> UICollectionViewDiffableDataSource<Section, NewsEntity.NewsItem> {
-        func sendNewPage(by indexPath: IndexPath) {
-            let snapshot = dataSource.snapshot()
-
-            if (indexPath.item + 1) == snapshot.itemIdentifiers.count {
-                currentPage.send(currentPage.value + 1)
-            }
-        }
-
-        return .init(collectionView: collectionView) { collectionView, indexPath, itemIdentifier in
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: String(describing: NewsItemCollectionViewCell.self),
-                for: indexPath
-            ) as? NewsItemCollectionViewCell
-            else {
-                fatalError("Invalid cell")
-            }
-
-            sendNewPage(by: indexPath)
-            cell.bind(to: itemIdentifier)
-
-            return cell
         }
     }
 }
@@ -170,7 +161,7 @@ extension NewsViewController: UICollectionViewDelegate {
         let snapshot = dataSource.snapshot()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.selection.send(snapshot.itemIdentifiers[indexPath.item])
+            self.viewModel.selection = snapshot.itemIdentifiers[indexPath.item]
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {

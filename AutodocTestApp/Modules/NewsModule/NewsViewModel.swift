@@ -8,15 +8,22 @@
 import Combine
 
 protocol NewsViewModelProtocol: AnyObject {
-    typealias Input = NewsViewModel.Input
     typealias Output = NewsViewModel.Output
 
-    func transform(_ input: Input) -> Output
+    var selection: NewsEntity.NewsItem? { get set }
+    var currentPage: Int { get set }
+
+    var state: CurrentValueSubject<NewsViewModel.NewsState, Never> { get }
 }
 
-final class NewsViewModel {
+final class NewsViewModel: NewsViewModelProtocol {
     private let networkService: NetworkServiceProtocol
     private let router: NewsRouterProtocol
+
+    @Published var selection: NewsEntity.NewsItem?
+    @Published var currentPage = 1
+
+    let state = CurrentValueSubject<NewsState, Never>(.loading)
 
     init(
         router: NewsRouterProtocol,
@@ -24,29 +31,25 @@ final class NewsViewModel {
     ) {
         self.networkService = networkService
         self.router = router
-    }
 
-    private var subscriptions = Set<AnyCancellable>()
-}
+        $selection
+            .compactMap { $0 }
+            .sink(receiveValue: router.showNewsDetails)
+            .store(in: &subscriptions)
 
-extension NewsViewModel: NewsViewModelProtocol {
-    func transform(_ input: Input) -> Output {
-        let initialState = Just(NewsState.loading).eraseToAnyPublisher()
-        let newsItems = PassthroughSubject<NewsState, Never>()
-
-        input.selection.bind(to: router.showNewsDetails).store(in: &subscriptions)
-        input.currentPage
+        $currentPage
             .mapAsyncThrows { [networkService] in
                 try await networkService.fetchNews(from: $0)
             }
             .scan([]) { $0 + $1 }
             .map { .success($0) }
-            .catch { Just(NewsState.failure($0)) }
-            .sink(receiveValue: newsItems.send)
+            .catch { Just(.failure($0)) }
+            .removeDuplicates()
+            .sink(receiveValue: state.send)
             .store(in: &subscriptions)
-
-        return Output(state: Publishers.Merge(initialState, newsItems).removeDuplicates().eraseToAnyPublisher())
     }
+
+    private var subscriptions = Set<AnyCancellable>()
 }
 
 extension NewsViewModel {
@@ -54,11 +57,6 @@ extension NewsViewModel {
         case loading
         case success([NewsEntity.NewsItem])
         case failure(Error)
-    }
-
-    struct Input {
-        let selection: PassthroughSubject<NewsEntity.NewsItem, Never>
-        let currentPage: CurrentValueSubject<Int, Never>
     }
 
     struct Output {

@@ -115,29 +115,17 @@ final class NewsDetailsViewController: UIViewController {
         }
 
         func bind() {
-            let output = viewModel.transform(.init())
+            titleLabel.text = viewModel.newsItem.title
+            categoryTypeLabel.text = viewModel.newsItem.categoryType
 
-            output.state.sink(receiveValue: render).store(in: &subscriptions)
-        }
-
-        addSubviews()
-        setContraints()
-        bind()
-    }
-
-    private func render(_ newsState: NewsDetailsViewModel.NewsState) {
-        switch newsState {
-        case .render(let newsItem):
-            titleLabel.text = newsItem.title
-            categoryTypeLabel.text = newsItem.categoryType
-
-            if let publishedDate = newsItem.publishedDate {
+            let titleImageUrl = viewModel.newsItem.titleImageUrl
+            if let publishedDate = viewModel.newsItem.publishedDate {
                 publishedDateLabel.text = DateFormatter().then { $0.dateFormat = "dd.MM.yyyy" }.string(from: publishedDate)
             }
 
             loadTitleImageTask = Task { [titleImageView] in
                 do {
-                    guard let titleImageUrl = newsItem.titleImageUrl else {
+                    guard let titleImageUrl = titleImageUrl else {
                         throw URLError(.cannotDecodeContentData)
                     }
 
@@ -147,7 +135,11 @@ final class NewsDetailsViewController: UIViewController {
                 }
             }
 
-            descriptionLabel.text = newsItem.description
+            descriptionLabel.text = viewModel.newsItem.description
         }
+
+        addSubviews()
+        setContraints()
+        bind()
     }
 }

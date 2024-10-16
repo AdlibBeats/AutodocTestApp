@@ -10,28 +10,19 @@ import Combine
 import class UIKit.UIViewController
 
 protocol NewsRouterProtocol: AnyObject {
-    var showNewsDetails: PassthroughSubject<NewsEntity.NewsItem, Never> { get }
+    func showNewsDetails(with newsItem: NewsEntity.NewsItem)
 }
 
-final class NewsRouter: NewsRouterProtocol {
-    private var subscriptions = Set<AnyCancellable>()
-
-    let showNewsDetails = PassthroughSubject<NewsEntity.NewsItem, Never>()
-
+final class NewsRouter {
     weak var viewController: UIViewController?
+}
 
-    init() {
-        func bind() {
-            showNewsDetails
-                .sink { [weak self] in
-                    let newsDetailsViewModel = NewsDetailsViewModel(newsItem: $0)
-                    let newsDetailsViewController = NewsDetailsViewController(viewModel: newsDetailsViewModel)
+extension NewsRouter: NewsRouterProtocol {
+    func showNewsDetails(with newsItem: NewsEntity.NewsItem) {
+        let newsDetailsViewModel = NewsDetailsViewModel(newsItem: newsItem)
+        let newsDetailsViewController = NewsDetailsViewController(viewModel: newsDetailsViewModel)
 
-                    self?.viewController?.navigationController?.pushViewController(newsDetailsViewController, animated: true)
-                }
-                .store(in: &subscriptions)
-        }
+        viewController?.navigationController?.pushViewController(newsDetailsViewController, animated: true)
 
-        bind()
     }
 }
