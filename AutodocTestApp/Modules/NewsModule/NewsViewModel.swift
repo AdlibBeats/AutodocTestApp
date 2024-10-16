@@ -8,8 +8,6 @@
 import Combine
 
 protocol NewsViewModelProtocol: AnyObject {
-    typealias Output = NewsViewModel.Output
-
     var selection: NewsEntity.NewsItem? { get set }
     var currentPage: Int { get set }
 
@@ -57,10 +55,6 @@ extension NewsViewModel {
         case loading
         case success([NewsEntity.NewsItem])
         case failure(Error)
-    }
-
-    struct Output {
-        let state: AnyPublisher<NewsState, Never>
     }
 }
 
