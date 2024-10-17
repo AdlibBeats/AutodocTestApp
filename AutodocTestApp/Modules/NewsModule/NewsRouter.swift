@@ -5,8 +5,6 @@
 //  Created by Andrey Vasiliev on 10.10.2024.
 //
 
-import Combine
-
 import class UIKit.UIViewController
 
 protocol NewsRouterProtocol: AnyObject {
@@ -23,6 +21,5 @@ extension NewsRouter: NewsRouterProtocol {
         let newsDetailsViewController = NewsDetailsViewController(viewModel: newsDetailsViewModel)
 
         viewController?.navigationController?.pushViewController(newsDetailsViewController, animated: true)
-
     }
 }

@@ -36,7 +36,7 @@ final class NewsViewModel: NewsViewModelProtocol {
             .store(in: &subscriptions)
 
         $currentPage
-            .mapAsyncThrows { [networkService] in
+            .mapAsyncThrows {
                 try await networkService.fetchNews(from: $0)
             }
             .scan([]) { $0 + $1 }

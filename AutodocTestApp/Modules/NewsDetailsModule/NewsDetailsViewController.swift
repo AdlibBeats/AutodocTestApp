@@ -6,12 +6,9 @@
 //
 
 import UIKit
-import Combine
 
 final class NewsDetailsViewController: UIViewController {
     typealias ViewModel = NewsDetailsViewModelProtocol
-
-    private var subscriptions = Set<AnyCancellable>()
 
     private let viewModel: ViewModel
     init(viewModel: ViewModel) {

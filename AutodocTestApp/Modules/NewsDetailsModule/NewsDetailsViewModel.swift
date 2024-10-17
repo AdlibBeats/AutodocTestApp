@@ -5,8 +5,6 @@
 //  Created by Andrey Vasiliev on 10.10.2024.
 //
 
-import Combine
-
 protocol NewsDetailsViewModelProtocol: AnyObject {
     var newsItem: NewsEntity.NewsItem { get }
 }
