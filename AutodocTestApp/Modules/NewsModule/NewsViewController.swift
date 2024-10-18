@@ -18,25 +18,21 @@ final class NewsViewController: UIViewController {
     private var subscriptions = Set<AnyCancellable>()
     private let viewModel: ViewModel
 
-    private let cellRegistration = UICollectionView.CellRegistration<NewsItemCollectionViewCell, NewsEntity.NewsItem> { cell, _, itemIdentifier in
-        cell.bind(to: itemIdentifier)
-    }
-
     private lazy var dataSource: UICollectionViewDiffableDataSource<Section, NewsEntity.NewsItem> = {
-        func setNewPage(by indexPath: IndexPath) {
-            let snapshot = dataSource.snapshot()
-
-            if (indexPath.item + 1) == snapshot.itemIdentifiers.count {
-                viewModel.currentPage += 1
-            }
+        let cellRegistration = UICollectionView.CellRegistration<NewsItemCollectionViewCell, NewsEntity.NewsItem> { cell, _, itemIdentifier in
+            cell.bind(to: itemIdentifier)
         }
 
-        return .init(collectionView: collectionView) { [cellRegistration] collectionView, indexPath, itemIdentifier in
-            collectionView.dequeueConfiguredReusableCell(
+        return .init(collectionView: collectionView) { [unowned self] collectionView, indexPath, itemIdentifier in
+            if (indexPath.item + 1) == self.dataSource.snapshot().itemIdentifiers.count {
+                self.viewModel.currentPage += 1
+            }
+
+            return collectionView.dequeueConfiguredReusableCell(
                 using: cellRegistration,
                 for: indexPath,
                 item: itemIdentifier
-            ).then { _ in setNewPage(by: indexPath) }
+            )
         }
     }()
 
@@ -158,11 +154,7 @@ extension NewsViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
-        let snapshot = dataSource.snapshot()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.viewModel.selection = snapshot.itemIdentifiers[indexPath.item]
-        }
+        self.viewModel.selection = dataSource.snapshot().itemIdentifiers[indexPath.item]
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             collectionView.deselectItem(at: indexPath, animated: true)

@@ -7,6 +7,8 @@
 
 import Combine
 
+import class Foundation.RunLoop
+
 protocol NewsViewModelProtocol: AnyObject {
     var selection: NewsEntity.NewsItem? { get set }
     var currentPage: Int { get set }
@@ -32,6 +34,7 @@ final class NewsViewModel: NewsViewModelProtocol {
 
         $selection
             .compactMap { $0 }
+            .delay(for: 0.1, scheduler: RunLoop.main)
             .sink(receiveValue: router.showNewsDetails)
             .store(in: &subscriptions)
 
